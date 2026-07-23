@@ -7,8 +7,6 @@
 
 A **local, zero-knowledge encrypted password manager** web application built with Python, Flask, and production-grade cryptography. Your master password is never stored — only you can unlock your vault.
 
-![Vault Dashboard](docs/dashboard.png)
-
 ---
 
 ## Why This Project
