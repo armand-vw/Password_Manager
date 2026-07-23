@@ -1,8 +1,8 @@
 """Configuration loader with .env support and sensible defaults."""
 
 import os
-import secrets
 from pathlib import Path
+import secrets
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent

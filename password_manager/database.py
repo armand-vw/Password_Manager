@@ -1,6 +1,6 @@
-import sqlite3
-import os
 import logging
+import sqlite3
+
 from flask import g
 
 logger = logging.getLogger(__name__)

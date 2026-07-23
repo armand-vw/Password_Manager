@@ -3,10 +3,11 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, jsonify
+
+from flask import Flask, jsonify, render_template
 
 from password_manager.config import Config
-from password_manager.database import init_db, close_db
+from password_manager.database import close_db, init_db
 from password_manager.utils.security import add_security_headers
 
 

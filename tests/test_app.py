@@ -1,4 +1,5 @@
 import pytest
+
 from password_manager import create_app
 
 
@@ -97,13 +98,13 @@ class TestCrypto:
 
 class TestDatabase:
     def test_init_db(self, app):
-        from password_manager.database import get_db, get_all_entries
+        from password_manager.database import get_all_entries, get_db
         conn = get_db()
         entries = get_all_entries(conn)
         assert entries == []
 
     def test_add_and_get_entries(self, app):
-        from password_manager.database import get_db, add_entry, get_all_entries
+        from password_manager.database import add_entry, get_all_entries, get_db
         conn = get_db()
         add_entry(conn, "GitHub", "user", "encpass", "nonce123")
         conn.commit()
@@ -112,7 +113,7 @@ class TestDatabase:
         assert entries[0]["service_name"] == "GitHub"
 
     def test_search_entries(self, app):
-        from password_manager.database import get_db, add_entry, search_entries
+        from password_manager.database import add_entry, get_db, search_entries
         conn = get_db()
         add_entry(conn, "GitHub", "alice", "enc1", "n1")
         add_entry(conn, "BitBucket", "bob", "enc2", "n2")
@@ -126,7 +127,7 @@ class TestDatabase:
         assert len(results) == 0
 
     def test_update_entry(self, app):
-        from password_manager.database import get_db, add_entry, update_entry, get_entry
+        from password_manager.database import add_entry, get_db, get_entry, update_entry
         conn = get_db()
         eid = add_entry(conn, "Old", "old", "enc", "n")
         conn.commit()
@@ -137,7 +138,7 @@ class TestDatabase:
         assert entry["username"] == "new"
 
     def test_delete_entry(self, app):
-        from password_manager.database import get_db, add_entry, delete_entry, get_entry
+        from password_manager.database import add_entry, delete_entry, get_db, get_entry
         conn = get_db()
         eid = add_entry(conn, "X", "y", "e", "n")
         conn.commit()
