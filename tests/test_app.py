@@ -57,7 +57,9 @@ class TestCrypto:
         assert key1 != key3
 
     def test_encrypt_decrypt_roundtrip(self):
-        from password_manager.crypto import derive_key, encrypt_password, decrypt_password, generate_salt
+        from password_manager.crypto import (
+            decrypt_password, derive_key, encrypt_password, generate_salt,
+        )
         salt = generate_salt()
         key = derive_key("masterpass", salt)
         ct, nonce = encrypt_password(key, "MySecret123!")
@@ -65,8 +67,9 @@ class TestCrypto:
         assert result == "MySecret123!"
 
     def test_decrypt_wrong_key_fails(self):
-        from password_manager.crypto import derive_key, encrypt_password, decrypt_password, generate_salt
-        from cryptography.exceptions import InvalidTag
+        from password_manager.crypto import (
+            decrypt_password, derive_key, encrypt_password, generate_salt,
+        )
         salt = generate_salt()
         key1 = derive_key("correct", salt)
         key2 = derive_key("wrong", salt)

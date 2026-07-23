@@ -1,19 +1,21 @@
 """Authentication blueprint: setup, unlock, lock routes."""
 
-import secrets
 import logging
-from flask import Blueprint, request, session, jsonify, redirect, url_for, render_template
+import secrets
+import time
 
+from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
+
+from password_manager.config import Config
 from password_manager.crypto import (
+    VERIFICATION_STRING,
+    decrypt_password,
     derive_key,
     encrypt_password,
-    decrypt_password,
     generate_salt,
-    VERIFICATION_STRING,
 )
 from password_manager.database import get_db, get_setting, set_setting
 from password_manager.utils.security import rate_limit, reset_rate_limit
-from password_manager.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ def set_encryption_key(key: bytes) -> None:
     key_id = secrets.token_hex(16)
     session_keys[key_id] = key
     session["key_id"] = key_id
-    session["last_active"] = __import__("time").time()
+    session["last_active"] = time.time()
 
 
 def clear_encryption_key() -> None:

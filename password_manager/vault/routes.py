@@ -2,15 +2,13 @@
 
 import json
 import logging
-import secrets
-import string
-from datetime import timezone, datetime
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 
 from password_manager.auth.routes import get_encryption_key
 from password_manager.crypto import (
-    encrypt_password,
     decrypt_password,
+    encrypt_password,
     generate_password,
     password_strength,
 )

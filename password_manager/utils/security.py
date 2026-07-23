@@ -1,14 +1,19 @@
 """Security utilities: rate limiter and security headers."""
 
-import time
-import threading
-from collections import defaultdict
+from __future__ import annotations
 
+import threading
+import time
+from collections import defaultdict
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import flask
 
 # ---- In-memory rate limiter (no external deps) ----
 
 _lock = threading.Lock()
-_attempts: dict[str, "list[float]"] = defaultdict(list)
+_attempts: dict[str, list[float]] = defaultdict(list)
 
 
 def rate_limit(key: str, max_attempts: int = 5, window_seconds: int = 60) -> bool:
@@ -45,11 +50,10 @@ SECURITY_HEADERS = {
 }
 
 
-def add_security_headers(response: "flask.Response") -> "flask.Response":
+def add_security_headers(response: flask.Response) -> flask.Response:
     """Attach hardened security headers to every response."""
     for header, value in SECURITY_HEADERS.items():
         response.headers.setdefault(header, value)
-    # CSP: only allow same-origin scripts/styles
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; "
