@@ -128,6 +128,7 @@ def add_entry(
         "VALUES (?, ?, ?, ?, ?, ?)",
         (service_name, username, encrypted_password, nonce, url, notes),
     )
+    assert cursor.lastrowid is not None
     return cursor.lastrowid
 
 
