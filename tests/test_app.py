@@ -59,7 +59,10 @@ class TestCrypto:
 
     def test_encrypt_decrypt_roundtrip(self):
         from password_manager.crypto import (
-            decrypt_password, derive_key, encrypt_password, generate_salt,
+            decrypt_password,
+            derive_key,
+            encrypt_password,
+            generate_salt,
         )
         salt = generate_salt()
         key = derive_key("masterpass", salt)
@@ -69,7 +72,10 @@ class TestCrypto:
 
     def test_decrypt_wrong_key_fails(self):
         from password_manager.crypto import (
-            decrypt_password, derive_key, encrypt_password, generate_salt,
+            decrypt_password,
+            derive_key,
+            encrypt_password,
+            generate_salt,
         )
         salt = generate_salt()
         key1 = derive_key("correct", salt)

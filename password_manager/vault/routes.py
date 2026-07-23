@@ -3,7 +3,14 @@
 import json
 import logging
 
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 
 from password_manager.auth.routes import get_encryption_key
 from password_manager.crypto import (
