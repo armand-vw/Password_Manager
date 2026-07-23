@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault — Password Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="vault-page">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Password Manager</span>
+        </div>
+        <div class="nav-actions">
+            <button class="btn btn-outline btn-sm" onclick="openExportModal()">Export</button>
+            <button class="btn btn-outline btn-sm" onclick="openImportModal()">Import</button>
+            <button class="btn btn-outline btn-sm" onclick="openChangePasswordModal()">Change Password</button>
+            <button class="btn btn-outline" onclick="lock()">Lock</button>
+        </div>
+    </nav>
+
+    <main class="vault-container">
+        <div class="toolbar">
+            <div class="search-box">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="search" placeholder="Search (Ctrl+S)" oninput="onSearchDebounced()">
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Add Password <span class="shortcut-hint">Ctrl+N</span></button>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="entries-table"><thead><tr><th>Service</th><th>Username</th><th>Password</th><th>Actions</th></tr></thead>
+                <tbody id="entries-body"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+            </table>
+        </div>
+
+        <div class="auto-lock-status" id="auto-lock-status"></div>
+    </main>
+
+    <!-- Add / Edit Modal -->
+    <div id="entry-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header"><h2 id="modal-title">Add Password</h2><button class="btn-close" onclick="closeModal()">&times;</button></div>
+            <form id="entry-form" onsubmit="handleSave(event)">
+                <input type="hidden" id="entry-id">
+                <div class="form-group">
+                    <label for="service-name">Service Name</label>
+                    <input type="text" id="service-name" placeholder="e.g. GitHub" required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="e.g. user@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="url">URL</label>
+                    <input type="text" id="url" placeholder="e.g. https://github.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-field">
+                        <input type="password" id="password" placeholder="Enter or generate a password" required oninput="checkGeneratorStrength()">
+                        <button type="button" class="btn-icon" onclick="togglePasswordField('password')" title="Show/Hide">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                    <div class="gen-strength" style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                        <div class="strength-bar" style="flex:1"><div id="gen-strength-bar" class="strength-fill"></div></div>
+                        <span id="gen-strength-label" class="strength-label"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <input type="text" id="notes" placeholder="Optional notes...">
+                </div>
+                <details class="generator-panel">
+                    <summary>Password Generator Options</summary>
+                    <div class="gen-options">
+                        <div class="gen-row">
+                            <label>Length: <input type="number" id="gen-length" value="24" min="8" max="128" style="width:70px"></label>
+                        </div>
+                        <div class="gen-row">
+                            <label><input type="checkbox" id="gen-upper" checked> Uppercase</label>
+                            <label><input type="checkbox" id="gen-digits" checked> Digits</label>
+                            <label><input type="checkbox" id="gen-symbols" checked> Symbols</label>
+                            <label><input type="checkbox" id="gen-noambig"> No ambiguous</label>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="generatePassword()">Generate</button>
+                    </div>
+                </details>
+                <p id="form-error" class="error hidden"></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header"><h2>Export Vault</h2><button class="btn-close" onclick="closeExportModal()">&times;</button></div>
+            <p style="margin-bottom:16px;color:var(--text-muted)">Copy the JSON below and store it securely. Passwords are exported in plaintext.</p>
+            <textarea id="export-data" rows="12" readonly style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:0.85rem;resize:vertical;"></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="copyExport()">Copy to Clipboard</button>
+                <button class="btn btn-outline" onclick="closeExportModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="import-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header"><h2>Import Vault</h2><button class="btn-close" onclick="closeImportModal()">&times;</button></div>
+            <p style="margin-bottom:12px;color:var(--text-muted)">Paste previously exported JSON data.</p>
+            <textarea id="import-data" rows="10" placeholder='[{"service_name":"...","username":"...","password":"...",...}]' style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:0.85rem;resize:vertical;"></textarea>
+            <div style="margin-top:8px"><label><input type="checkbox" id="import-overwrite"> Replace all existing entries</label></div>
+            <p id="import-error" class="error hidden"></p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeImportModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="doImport()">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changepw-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header"><h2>Change Master Password</h2><button class="btn-close" onclick="closeChangePasswordModal()">&times;</button></div>
+            <div class="form-group"><label>Current Password</label><input type="password" id="changepw-old" required></div>
+            <div class="form-group"><label>New Password</label><input type="password" id="changepw-new" required minlength="8"></div>
+            <div class="form-group"><label>Confirm New Password</label><input type="password" id="changepw-confirm" required minlength="8"></div>
+            <p id="changepw-error" class="error hidden"></p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeChangePasswordModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="doChangePassword()">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allEntries = [], currentSearch = '', searchTimer = null, autoLockTimer = null, autoLockMinutes = 5;
+
+        window.addEventListener('load', () => { loadEntries(); startAutoLock(); });
+
+        async function loadEntries() {
+            const url = currentSearch ? `/api/entries?q=${encodeURIComponent(currentSearch)}` : '/api/entries';
+            try { const res = await fetch(url); if (res.status===401) { window.location.href='/'; return; } const data = await res.json(); allEntries = data.entries||[]; renderEntries(allEntries); }
+            catch(err) { document.getElementById('entries-body').innerHTML='<tr class="empty-row"><td colspan="4">Connection error</td></tr>'; }
+        }
+
+        function renderEntries(entries) {
+            const tbody = document.getElementById('entries-body');
+            if (!entries.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No passwords yet. Click "+ Add Password" or press Ctrl+N.</td></tr>'; return; }
+            tbody.innerHTML = entries.map(e => {
+                const uid = `pw-${e.id}`;
+                return `<tr>
+                    <td class="cell-service">
+                        <div class="service-icon">${e.service_name.charAt(0).toUpperCase()}</div>
+                        <div><strong>${esc(e.service_name)}</strong>${e.url ? `<a href="${esc(e.url)}" target="_blank" class="ext-link" title="Open">&#8599;</a>` : ''}<span class="date-badge">${new Date(e.updated_at+'Z').toLocaleDateString()}</span></div>
+                    </td>
+                    <td>${esc(e.username||'—')}</td>
+                    <td>
+                        <div class="password-cell">
+                            <input type="password" id="${uid}" value="${esc(e.password)}" readonly class="pw-field">
+                            <button class="btn-icon" onclick="togglePasswordField('${uid}')" title="Show/Hide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+                            <button class="btn-icon copy-btn" onclick="copyPassword('${uid}')" title="Copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                        </div>
+                    </td>
+                    <td class="cell-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openEditModal(${e.id})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEntry(${e.id})">Delete</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function onSearchDebounced() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { currentSearch = document.getElementById('search').value.trim(); loadEntries(); resetAutoLock(); }, 300);
+        }
+
+        function togglePasswordField(uid) { const el = document.getElementById(uid); if (el) el.type = el.type==='password' ? 'text' : 'password'; }
+
+        async function copyPassword(uid) {
+            const el = document.getElementById(uid); if (!el) return;
+            const was = el.type; el.type = 'text';
+            try { await navigator.clipboard.writeText(el.value); } catch { el.select(); document.execCommand('copy'); }
+            el.type = was;
+            const btn = el.parentElement.querySelector('.copy-btn');
+            btn.innerHTML = '&#10003;'; setTimeout(() => btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>', 1500);
+            resetAutoLock();
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').textContent='Add Password'; document.getElementById('entry-id').value='';
+            document.getElementById('service-name').value=''; document.getElementById('username').value='';
+            document.getElementById('password').value=''; document.getElementById('url').value=''; document.getElementById('notes').value='';
+            document.getElementById('form-error').classList.add('hidden');
+            document.getElementById('gen-strength-bar').style.width='0%'; document.getElementById('gen-strength-label').textContent='';
+            document.getElementById('entry-modal').classList.remove('hidden'); document.getElementById('service-name').focus();
+        }
+
+        function openEditModal(id) {
+            const entry = allEntries.find(e => e.id===id); if (!entry) return;
+            document.getElementById('modal-title').textContent='Edit Password'; document.getElementById('entry-id').value=entry.id;
+            document.getElementById('service-name').value=entry.service_name; document.getElementById('username').value=entry.username;
+            document.getElementById('password').value=entry.password; document.getElementById('url').value=entry.url||'';
+            document.getElementById('notes').value=entry.notes||''; document.getElementById('form-error').classList.add('hidden');
+            document.getElementById('entry-modal').classList.remove('hidden'); document.getElementById('service-name').focus();
+            checkGeneratorStrength();
+        }
+
+        function closeModal() { document.getElementById('entry-modal').classList.add('hidden'); }
+
+        async function handleSave(e) {
+            e.preventDefault();
+            const id = document.getElementById('entry-id').value;
+            const service_name = document.getElementById('service-name').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const notes = document.getElementById('notes').value.trim();
+            const error = document.getElementById('form-error');
+            if (!service_name||!username||!password) { error.textContent='All required fields must be filled'; error.classList.remove('hidden'); return; }
+            const api = id ? `/api/entries/${id}` : '/api/entries';
+            const method = id ? 'PUT' : 'POST';
+            try {
+                const res = await fetch(api, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify({service_name,username,password,url,notes})});
+                const data = await res.json();
+                if (data.success) { closeModal(); loadEntries(); resetAutoLock(); }
+                else { error.textContent=data.error||'Save failed'; error.classList.remove('hidden'); }
+            } catch(err) { error.textContent='Connection error'; error.classList.remove('hidden'); }
+        }
+
+        async function deleteEntry(id) {
+            if (!confirm('Delete this password? This cannot be undone.')) return;
+            try { await fetch(`/api/entries/${id}`,{method:'DELETE'}); loadEntries(); resetAutoLock(); }
+            catch(err) { alert('Failed to delete entry.'); }
+        }
+
+        async function checkGeneratorStrength() {
+            const pw = document.getElementById('password').value;
+            if (!pw) { document.getElementById('gen-strength-bar').style.width='0%'; document.getElementById('gen-strength-label').textContent=''; return; }
+            try {
+                const res = await fetch('/api/strength', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+                const s = await res.json();
+                const colors = {'Very Weak':'#ef4444','Weak':'#f97316','Fair':'#eab308','Good':'#22c55e','Strong':'#16a34a','Very Strong':'#059669'};
+                document.getElementById('gen-strength-bar').style.width = ((s.score/5)*100)+'%';
+                document.getElementById('gen-strength-bar').style.background = colors[s.label]||'#6366f1';
+                document.getElementById('gen-strength-label').textContent = s.label;
+            } catch(e) {}
+        }
+
+        async function generatePassword() {
+            const len = document.getElementById('gen-length').value || 24;
+            const upper = document.getElementById('gen-upper').checked ? '1' : '0';
+            const digits = document.getElementById('gen-digits').checked ? '1' : '0';
+            const symbols = document.getElementById('gen-symbols').checked ? '1' : '0';
+            const noambig = document.getElementById('gen-noambig').checked ? '1' : '0';
+            try {
+                const res = await fetch(`/api/generate?len=${len}&upper=${upper}&digits=${digits}&symbols=${symbols}&noambig=${noambig}`);
+                const data = await res.json();
+                document.getElementById('password').value = data.password;
+                document.getElementById('password').type = 'text';
+                checkGeneratorStrength();
+            } catch(err) { alert('Failed to generate password.'); }
+        }
+
+        function lock() { window.location.href='/lock'; }
+
+        // -- Export --
+        async function openExportModal() {
+            try {
+                const res = await fetch('/api/export');
+                const data = await res.json();
+                document.getElementById('export-data').value = data.data;
+                document.getElementById('export-modal').classList.remove('hidden');
+            } catch(e) { alert('Export failed'); }
+        }
+        function closeExportModal() { document.getElementById('export-modal').classList.add('hidden'); }
+        function copyExport() { const ta = document.getElementById('export-data'); ta.select(); document.execCommand('copy'); }
+
+        // -- Import --
+        function openImportModal() { document.getElementById('import-modal').classList.remove('hidden'); }
+        function closeImportModal() { document.getElementById('import-modal').classList.add('hidden'); }
+        async function doImport() {
+            const data = document.getElementById('import-data').value.trim();
+            const overwrite = document.getElementById('import-overwrite').checked;
+            const error = document.getElementById('import-error');
+            if (!data) { error.textContent='Paste JSON data first'; error.classList.remove('hidden'); return; }
+            try {
+                const res = await fetch('/api/import', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,overwrite})});
+                const r = await res.json();
+                if (r.success) { alert(`Imported ${r.imported} entries`); closeImportModal(); loadEntries(); }
+                else { error.textContent=r.error||'Import failed'; error.classList.remove('hidden'); }
+            } catch(err) { error.textContent='Connection error'; error.classList.remove('hidden'); }
+        }
+
+        // -- Change Password --
+        function openChangePasswordModal() { document.getElementById('changepw-modal').classList.remove('hidden'); }
+        function closeChangePasswordModal() { document.getElementById('changepw-modal').classList.add('hidden'); }
+        async function doChangePassword() {
+            const old = document.getElementById('changepw-old').value;
+            const pw = document.getElementById('changepw-new').value;
+            const confirm = document.getElementById('changepw-confirm').value;
+            const error = document.getElementById('changepw-error');
+            if (pw !== confirm) { error.textContent='Passwords do not match'; error.classList.remove('hidden'); return; }
+            if (pw.length < 8) { error.textContent='Minimum 8 characters'; error.classList.remove('hidden'); return; }
+            error.classList.add('hidden');
+            try {
+                const res = await fetch('/change-password', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_password:old,new_password:pw})});
+                const data = await res.json();
+                if (data.success) { alert('Master password changed successfully'); closeChangePasswordModal(); }
+                else { error.textContent=data.error||'Failed'; error.classList.remove('hidden'); }
+            } catch(err) { error.textContent='Connection error'; error.classList.remove('hidden'); }
+        }
+
+        // -- Auto-lock --
+        function startAutoLock() { if (autoLockMinutes > 0) { resetAutoLock(); } }
+        function resetAutoLock() { clearTimeout(autoLockTimer); if (autoLockMinutes > 0) { autoLockTimer = setTimeout(() => { document.getElementById('auto-lock-status').textContent = 'Auto-locking due to inactivity...'; setTimeout(() => lock(), 2000); }, autoLockMinutes * 60 * 1000); } }
+
+        function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+        // -- Keyboard shortcuts --
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key==='n') { e.preventDefault(); openAddModal(); }
+            if (e.ctrlKey && e.key==='s') { e.preventDefault(); document.getElementById('search').focus(); }
+            if (e.ctrlKey && e.key==='l') { e.preventDefault(); lock(); }
+            if (e.key==='Escape') { closeModal(); closeExportModal(); closeImportModal(); closeChangePasswordModal(); }
+        });
+
+        document.getElementById('entry-modal').addEventListener('click', function(e) { if (e.target===this) closeModal(); });
+        document.getElementById('export-modal').addEventListener('click', function(e) { if (e.target===this) closeExportModal(); });
+        document.getElementById('import-modal').addEventListener('click', function(e) { if (e.target===this) closeImportModal(); });
+        document.getElementById('changepw-modal').addEventListener('click', function(e) { if (e.target===this) closeChangePasswordModal(); });
+    </script>
+</body>
+</html>

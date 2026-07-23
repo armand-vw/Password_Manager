@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-page">
+    <div class="container">
+        <div class="login-card">
+            <div class="logo">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h1>Password Manager</h1>
+            <p class="subtitle">Zero-knowledge encrypted vault</p>
+
+            {% if setup_needed %}
+            <form id="setup-form" onsubmit="handleSetup(event)">
+                <div class="form-group">
+                    <label for="setup-password">Create Master Password</label>
+                    <input type="password" id="setup-password" placeholder="Minimum 8 characters" required minlength="8" autofocus oninput="checkStrength('setup-password','setup-strength-bar','setup-strength-label')">
+                </div>
+                <div class="strength-row">
+                    <div class="strength-bar"><div id="setup-strength-bar" class="strength-fill"></div></div>
+                    <span id="setup-strength-label" class="strength-label"></span>
+                </div>
+                <div class="form-group">
+                    <label for="setup-confirm">Confirm Master Password</label>
+                    <input type="password" id="setup-confirm" placeholder="Re-enter your master password" required minlength="8">
+                </div>
+                <p id="setup-error" class="error hidden"></p>
+                <button type="submit" class="btn btn-primary btn-full">Create Vault</button>
+            </form>
+            {% else %}
+            <form id="unlock-form" onsubmit="handleUnlock(event)">
+                <div class="form-group">
+                    <label for="unlock-password">Master Password</label>
+                    <input type="password" id="unlock-password" placeholder="Enter your master password" required autofocus>
+                </div>
+                <p id="unlock-error" class="error hidden"></p>
+                <button type="submit" class="btn btn-primary btn-full">Unlock Vault</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        {% if setup_needed %}
+        async function checkStrength(inputId, barId, labelId) {
+            const pw = document.getElementById(inputId).value;
+            if (!pw) {
+                document.getElementById(barId).style.width = '0%';
+                document.getElementById(labelId).textContent = '';
+                return;
+            }
+            try {
+                const res = await fetch('/api/strength', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({password: pw})
+                });
+                const s = await res.json();
+                const colors = {'Very Weak':'#ef4444','Weak':'#f97316','Fair':'#eab308','Good':'#22c55e','Strong':'#16a34a','Very Strong':'#059669'};
+                document.getElementById(barId).style.width = ((s.score/5)*100)+'%';
+                document.getElementById(barId).style.background = colors[s.label]||'#6366f1';
+                document.getElementById(labelId).textContent = s.label;
+            } catch(e) {}
+        }
+        async function handleSetup(e) {
+            e.preventDefault();
+            const pw = document.getElementById('setup-password').value;
+            const confirm = document.getElementById('setup-confirm').value;
+            const error = document.getElementById('setup-error');
+            if (pw !== confirm) { error.textContent = 'Passwords do not match'; error.classList.remove('hidden'); return; }
+            if (pw.length < 8) { error.textContent = 'Minimum 8 characters required'; error.classList.remove('hidden'); return; }
+            error.classList.add('hidden');
+            try {
+                const res = await fetch('/setup', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({master_password: pw})
+                });
+                const data = await res.json();
+                if (data.redirect) window.location.href = data.redirect;
+                else { error.textContent = data.error||'Setup failed'; error.classList.remove('hidden'); }
+            } catch(err) { error.textContent = 'Connection error'; error.classList.remove('hidden'); }
+        }
+        {% else %}
+        async function handleUnlock(e) {
+            e.preventDefault();
+            const pw = document.getElementById('unlock-password').value;
+            const error = document.getElementById('unlock-error');
+            if (!pw) { error.textContent = 'Master password is required'; error.classList.remove('hidden'); return; }
+            error.classList.add('hidden');
+            try {
+                const res = await fetch('/unlock', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({master_password: pw})
+                });
+                const data = await res.json();
+                if (data.redirect) window.location.href = data.redirect;
+                else { error.textContent = data.error||'Unlock failed'; error.classList.remove('hidden'); }
+            } catch(err) { error.textContent = 'Connection error'; error.classList.remove('hidden'); }
+        }
+        {% endif %}
+    </script>
+</body>
+</html>

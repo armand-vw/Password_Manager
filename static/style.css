@@ -1,0 +1,141 @@
+/* ------------------------------------------------------------------ */
+/* Reset & Base                                                        */
+/* ------------------------------------------------------------------ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f1117;--surface:#1a1d27;--surface-hover:#232734;--border:#2a2e3a;--text:#e1e4ed;--text-muted:#8b8fa5;--primary:#6366f1;--primary-hover:#818cf8;--danger:#ef4444;--danger-hover:#f87171;--success:#22c55e;--radius:10px;--radius-sm:6px;--shadow:0 4px 24px rgba(0,0,0,0.4)}
+html{font-size:15px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                             */
+/* ------------------------------------------------------------------ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:1px solid transparent;border-radius:var(--radius-sm);font-size:.9rem;font-weight:500;cursor:pointer;transition:background .15s,border-color .15s,opacity .15s;text-decoration:none}
+.btn:active{opacity:.85}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-outline{background:transparent;color:var(--text-muted);border-color:var(--border)}
+.btn-outline:hover{background:var(--surface-hover);color:var(--text)}
+.btn-danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-sm{padding:5px 12px;font-size:.8rem}
+.btn-full{width:100%}
+.btn-icon{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;transition:color .15s}
+.btn-icon:hover{color:var(--text)}
+.btn-close{background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;line-height:1;padding:0 4px}
+.btn-close:hover{color:var(--text)}
+
+/* ------------------------------------------------------------------ */
+/* Login Page                                                          */
+/* ------------------------------------------------------------------ */
+.login-page{display:flex;align-items:center;justify-content:center}
+.container{width:100%;max-width:420px;padding:24px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px 32px;box-shadow:var(--shadow);text-align:center}
+.logo{color:var(--primary);margin-bottom:16px}
+.login-card h1{font-size:1.4rem;font-weight:600;margin-bottom:4px}
+.subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:28px}
+
+/* ------------------------------------------------------------------ */
+/* Strength bar                                                        */
+/* ------------------------------------------------------------------ */
+.strength-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.strength-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.strength-fill{height:100%;width:0;transition:width .3s,background .3s}
+.strength-label{font-size:.78rem;font-weight:500;min-width:70px;text-align:right;color:var(--text-muted)}
+
+/* ------------------------------------------------------------------ */
+/* Forms                                                               */
+/* ------------------------------------------------------------------ */
+.form-group{margin-bottom:16px;text-align:left}
+.form-group label{display:block;font-size:.85rem;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+.form-group input[type="text"],.form-group input[type="password"]{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.95rem;outline:none;transition:border-color .15s}
+.form-group input:focus{border-color:var(--primary)}
+.error{color:var(--danger);font-size:.85rem;margin-bottom:12px}
+.hidden{display:none!important}
+
+/* ------------------------------------------------------------------ */
+/* Navbar                                                              */
+/* ------------------------------------------------------------------ */
+.navbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1rem;color:var(--primary)}
+.nav-actions{display:flex;gap:8px;align-items:center}
+.shortcut-hint{font-size:.7rem;opacity:.5;margin-left:4px}
+
+/* ------------------------------------------------------------------ */
+/* Vault Layout                                                        */
+/* ------------------------------------------------------------------ */
+.vault-page{display:flex;flex-direction:column}
+.vault-container{max-width:1100px;width:100%;margin:0 auto;padding:24px;flex:1}
+
+/* ------------------------------------------------------------------ */
+/* Toolbar                                                             */
+/* ------------------------------------------------------------------ */
+.toolbar{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.search-box{flex:1;min-width:240px;position:relative}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
+.search-box input{width:100%;padding:10px 14px 10px 38px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.9rem;outline:none;transition:border-color .15s}
+.search-box input:focus{border-color:var(--primary)}
+
+/* ------------------------------------------------------------------ */
+/* Table                                                               */
+/* ------------------------------------------------------------------ */
+.table-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--surface-hover)}
+th{text-align:left;padding:12px 16px;font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:.9rem}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface-hover)}
+.empty-row td{text-align:center;color:var(--text-muted);padding:48px 16px}
+
+.cell-service{max-width:240px}
+.cell-service>div{display:flex;flex-direction:column}
+.cell-service strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.date-badge{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+.ext-link{color:var(--primary);text-decoration:none;font-size:.85rem;margin-left:4px}
+.ext-link:hover{text-decoration:underline}
+.password-cell{display:flex;align-items:center;gap:8px}
+.pw-field{background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:"SF Mono","Fira Code","Cascadia Code",monospace;font-size:.85rem;padding:4px 8px;outline:none;min-width:120px;max-width:200px}
+.cell-actions{white-space:nowrap;display:flex;gap:6px}
+
+/* ------------------------------------------------------------------ */
+/* Auto-lock status                                                    */
+/* ------------------------------------------------------------------ */
+.auto-lock-status{margin-top:16px;text-align:center;font-size:.8rem;color:var(--text-muted);min-height:20px}
+
+/* ------------------------------------------------------------------ */
+/* Modal                                                               */
+/* ------------------------------------------------------------------ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:flex-start;justify-content:center;z-index:1000;padding-top:48px;overflow-y:auto}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 32px 24px;width:100%;max-width:520px;margin:16px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-header h2{font-size:1.15rem;font-weight:600}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.password-field{display:flex;align-items:center;gap:6px}
+.password-field input{flex:1}
+.password-field .btn-icon{flex-shrink:0}
+.copy-btn svg{transition:transform .15s}
+.copy-btn:active svg{transform:scale(1.2)}
+
+/* ------------------------------------------------------------------ */
+/* Generator panel                                                     */
+/* ------------------------------------------------------------------ */
+.generator-panel{margin-top:4px}
+.generator-panel summary{font-size:.82rem;color:var(--text-muted);cursor:pointer;padding:4px 0}
+.generator-panel summary:hover{color:var(--text)}
+.gen-options{padding:8px 0}
+.gen-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:8px}
+.gen-row label{font-size:.82rem;color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.gen-row label input[type="checkbox"],.gen-row label input[type="number"]{accent-color:var(--primary)}
+.gen-row input[type="number"]{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:3px 6px;outline:none}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+@media (max-width:700px){
+    .vault-container{padding:16px 12px}
+    .toolbar{flex-direction:column}
+    .nav-actions{flex-wrap:wrap;gap:4px}
+    .nav-actions .btn-sm{padding:4px 8px;font-size:.72rem}
+    th:nth-child(2),td:nth-child(2){display:none}
+    .cell-actions{flex-direction:column}
+}
